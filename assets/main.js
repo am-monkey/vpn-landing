@@ -1,107 +1,65 @@
-$(function () {
-  $("#menu-btn").on("click", function () {
-    $(this).toggleClass("close");
-    $("#mobile-menu").toggleClass("active");
-    $("body").toggleClass("overflow");
-  });
+document.addEventListener("DOMContentLoaded", function () {
+  var menuBtn = document.getElementById("menu-btn");
+  var mobileMenu = document.getElementById("mobile-menu");
 
-  var video = $(".slide video");
+  if (menuBtn && mobileMenu) {
+    menuBtn.addEventListener("click", function () {
+      menuBtn.classList.toggle("close");
+      mobileMenu.classList.toggle("active");
+      document.body.classList.toggle("overflow");
+    });
+  }
 
-  var WindowWidth = $(window).width();
-
-  if (WindowWidth < 768) {
-    video.attr("src", "./assets/m-50-min.mp4");
-  } else {
-    video.attr("src", "./assets/d-50-min.mp4");
+  var video = document.querySelector(".slide video");
+  if (video) {
+    video.src =
+      window.innerWidth < 768
+        ? "./assets/m-50-min.mp4"
+        : "./assets/d-50-min.mp4";
   }
 });
 
-function findVideos() {
-  let videos = document.querySelectorAll(".video");
+(function () {
+  var el = document.querySelector(".hero-title");
+  if (!el) return;
 
-  for (let i = 0; i < videos.length; i++) {
-    setupVideo(videos[i]);
+  var text = el.textContent.trim();
+  var words = text.split(" ");
+
+  el.innerHTML = "";
+  var elements = [];
+  for (var i = 0; i < words.length; i++) {
+    var word = document.createElement("div");
+    word.style.display = "none";
+    word.style.opacity = "0";
+    word.style.transition = "opacity 500ms";
+    word.textContent = words[i] + (i + 1 === words.length ? "" : " ");
+    el.appendChild(word);
+    elements.push(word);
   }
-}
 
-function setupVideo(video) {
-  let link = video.querySelector(".video__link");
-  let id = parseMediaURL(link);
+  var WORD_DELAY = 400;
 
-  video.addEventListener("click", () => {
-    let iframe = createIframe(id);
+  function fadeIn(element, done) {
+    element.style.display = "";
+    // force reflow so the transition runs
+    void element.offsetWidth;
+    element.style.opacity = "1";
+    setTimeout(done, 500);
+  }
 
-    link.remove();
-    video.appendChild(iframe);
-  });
+  function nextWord(i) {
+    fadeIn(elements[i], function () {
+      var next = i + 1;
+      if (elements.length > next) {
+        setTimeout(function () {
+          nextWord(next);
+        }, WORD_DELAY);
+      }
+    });
+  }
 
-  link.removeAttribute("href");
-  video.classList.add("video--enabled");
-}
-
-function parseMediaURL(link) {
-  let regexp =
-    /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-  let url = link.href;
-  let match = url.match(regexp);
-
-  return match && match[7].length == 11 ? match[7] : "";
-}
-
-function createIframe(id) {
-  let iframe = document.createElement("iframe");
-
-  iframe.setAttribute("allowfullscreen", "");
-  iframe.setAttribute("allow", "autoplay");
-  iframe.setAttribute("src", generateURL(id));
-  iframe.classList.add("video__media");
-
-  return iframe;
-}
-
-function generateURL(id) {
-  let query = "?rel=0&showinfo=0&autoplay=1";
-
-  return "https://www.youtube.com/embed/" + id + query;
-}
-
-findVideos();
-
-var $el = $(".hero-title:first"),
-  text = $.trim($el.text()),
-  words = text.split(" "),
-  html = "";
-
-for (var i = 0; i < words.length; i++) {
-  html +=
-    '<div style="display:none">' +
-    words[i] +
-    (i + 1 === words.length ? "" : " ") +
-    "</div>";
-}
-elements = $el.html(html).children();
-
-function text_to_time(text) {
-  // implement your function
-  times = [100, 1000, 2000];
-  return times[text.length];
-}
-
-function next_word(i, _elements) {
-  element = _elements[i];
-  element = $(element);
-
-  element.fadeIn(500, function () {
-    i = i + 1;
-    if (_elements.length > i) {
-      time = text_to_time($(_elements[i]).text());
-      setTimeout(function () {
-        next_word(i, _elements);
-      }, time);
-    }
-  });
-}
-
-setTimeout(function () {
-  next_word(0, elements);
-}, 1000);
+  setTimeout(function () {
+    nextWord(0);
+  }, 1000);
+})();
